@@ -73,6 +73,21 @@ func (err *ErrorX) GRPCStatus() *status.Status {
 	return s
 }
 
+// WithRequestID 设置请求 ID.
+func (err *ErrorX) WithRequestID(requestID string) *ErrorX {
+	return err.KV("X-Request-ID", requestID) // 设置请求 ID
+}
+
+// Is 判断当前错误是否与目标错误匹配.
+// 它会递归遍历错误链，并比较 ErrorX 实例的 Code 和 Reason 字段.
+// 如果 Code 和 Reason 均相等，则返回 true；否则返回 false.
+func (err *ErrorX) Is(target error) bool {
+	if errx := new(ErrorX); errors.As(target, &errx) {
+		return errx.Code == err.Code && errx.Reason == err.Reason
+	}
+	return false
+}
+
 // Code 返回错误的 HTTP 代码.
 func Code(err error) int {
 	if err == nil {
