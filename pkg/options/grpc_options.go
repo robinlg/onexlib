@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
+var _ IOptions = (*GRPCOptions)(nil)
+
 // GRPCOptions are for creating an unauthenticated, unauthorized, insecure port.
 // No one should be using these anymore.
 type GRPCOptions struct {
