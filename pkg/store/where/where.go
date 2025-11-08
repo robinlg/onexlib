@@ -1,11 +1,18 @@
 package where
 
-import "gorm.io/gorm/clause"
+import (
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
 
 const (
 	// defaultLimit defines the default limit for pagination.
 	defaultLimit = -1
 )
+
+type Where interface {
+	Where(db *gorm.DB) *gorm.DB
+}
 
 // Option defines a function type that modifies Options.
 type Option func(*Options)
@@ -132,6 +139,11 @@ func (whr *Options) F(kvs ...any) *Options {
 func (whr *Options) C(conds ...clause.Expression) *Options {
 	whr.Clauses = append(whr.Clauses, conds...)
 	return whr
+}
+
+// Where applies the filters and clauses to the given gorm.DB instance.
+func (whr *Options) Where(db *gorm.DB) *gorm.DB {
+	return db.Where(whr.Filters).Clauses(whr.Clauses...).Offset(whr.Offset).Limit(whr.Limit)
 }
 
 // O is a convenience function to create a new Options with offset.
