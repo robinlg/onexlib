@@ -1,6 +1,8 @@
 package where
 
 import (
+	"context"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -9,6 +11,12 @@ const (
 	// defaultLimit defines the default limit for pagination.
 	defaultLimit = -1
 )
+
+// Tenant represents a tenant with a key and a function to retrieve its value.
+type Tenant struct {
+	Key       string                           // The key associated with the tenant
+	ValueFunc func(ctx context.Context) string // Function to retrieve the tenant's value based on the context
+}
 
 type Where interface {
 	Where(db *gorm.DB) *gorm.DB
@@ -30,6 +38,9 @@ type Options struct {
 	// Clauses contains custom clauses to be appended to the query.
 	Clauses []clause.Expression
 }
+
+// tenant holds the registered tenant instance.
+var registeredTenant Tenant
 
 // WithOffset initializes the Offset field in Options with the given offset value.
 func WithOffset(offset int64) Option {
@@ -141,6 +152,14 @@ func (whr *Options) C(conds ...clause.Expression) *Options {
 	return whr
 }
 
+// T retrieves the value associated with the registered tenant using the provided context.
+func (whr *Options) T(ctx context.Context) *Options {
+	if registeredTenant.Key != "" && registeredTenant.ValueFunc != nil {
+		whr.F(registeredTenant.Key, registeredTenant.ValueFunc(ctx))
+	}
+	return whr
+}
+
 // Where applies the filters and clauses to the given gorm.DB instance.
 func (whr *Options) Where(db *gorm.DB) *gorm.DB {
 	return db.Where(whr.Filters).Clauses(whr.Clauses...).Offset(whr.Offset).Limit(whr.Limit)
@@ -164,4 +183,12 @@ func C(conds ...clause.Expression) *Options {
 // F is a convenience function to create a new Options with filters.
 func F(kvs ...any) *Options {
 	return NewWhere().F(kvs...)
+}
+
+// RegisterTenant registers a new tenant with the specified key and value function.
+func RegisterTenant(key string, valueFunc func(context.Context) string) {
+	registeredTenant = Tenant{
+		Key:       key,
+		ValueFunc: valueFunc,
+	}
 }
