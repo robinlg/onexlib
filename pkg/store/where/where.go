@@ -180,6 +180,11 @@ func C(conds ...clause.Expression) *Options {
 	return NewWhere().C(conds...)
 }
 
+// T is a convenience function to create a new Options with tenant.
+func T(ctx context.Context) *Options {
+	return NewWhere().F(registeredTenant.Key, registeredTenant.ValueFunc(ctx))
+}
+
 // F is a convenience function to create a new Options with filters.
 func F(kvs ...any) *Options {
 	return NewWhere().F(kvs...)
