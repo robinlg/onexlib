@@ -3,9 +3,19 @@ package options
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	netutils "k8s.io/utils/net"
 )
+
+func join(prefixes ...string) string {
+	joined := strings.Join(prefixes, ".")
+	if joined != "" {
+		joined += "."
+	}
+
+	return joined
+}
 
 // ValidateAddress takes an address as a string and validates it.
 // If the input address is not in a valid :port or IP:port format, it returns an error.
