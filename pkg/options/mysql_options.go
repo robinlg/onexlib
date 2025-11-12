@@ -31,7 +31,7 @@ func NewMySQLOptions() *MySQLOptions {
 		Addr:                  "127.0.0.1:3306",
 		Username:              "root",
 		Password:              "root123456",
-		Database:              "onex",
+		Database:              "onexblog",
 		MaxIdleConnections:    100,
 		MaxOpenConnections:    100,
 		MaxConnectionLifeTime: time.Duration(10) * time.Second,
