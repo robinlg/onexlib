@@ -32,12 +32,12 @@ func WithLogger[T any](logger Logger) Option[T] {
 }
 
 // NewStore creates a new instance of Store with the provided DBProvider.
-func NewStore[T any](storage DBProvider, logger Logger) Store[T] {
+func NewStore[T any](storage DBProvider, logger Logger) *Store[T] {
 	if logger == nil {
 		logger = empty.NewLogger()
 	}
 
-	return Store[T]{
+	return &Store[T]{
 		logger:  logger,
 		storage: storage,
 	}
