@@ -43,6 +43,40 @@ func HandleUriRequest[T any, R any](c *gin.Context, handler Handler[T, R], valid
 	HandleRequest(c, c.ShouldBindUri, handler, validators...)
 }
 
+// HandleUriJSONRequest 是处理"URI 路径参数 + JSON Body"混合请求的快捷函数.
+//
+// 典型场景：PUT/PATCH /resources/:id，路径里带 id，body 里带更新字段.
+// 绑定顺序：先绑 URI，再绑 JSON. 因此 body 里的同名字段会覆盖 URI 值，
+// 若不希望被覆盖，可在 proto/结构体中将该字段从 JSON 中拿掉（去掉 json tag 或改为 "-"）.
+func HandleUriJSONRequest[T any, R any](c *gin.Context, handler Handler[T, R], validators ...Validator[T]) {
+	HandleRequest(c, ComposeBinders(c.ShouldBindUri, c.ShouldBindJSON), handler, validators...)
+}
+
+// HandleUriQueryRequest 是处理"URI 路径参数 + Query 查询参数"混合请求的快捷函数.
+//
+// 典型场景：GET /resources/:id?verbose=true.
+// 绑定顺序：先绑 URI，再绑 Query.
+func HandleUriQueryRequest[T any, R any](c *gin.Context, handler Handler[T, R], validators ...Validator[T]) {
+	HandleRequest(c, ComposeBinders(c.ShouldBindUri, c.ShouldBindQuery), handler, validators...)
+}
+
+// ComposeBinders 将多个 Binder 顺序组合为一个 Binder.
+// 任一 Binder 返回错误则立即终止并返回该错误；全部成功则返回 nil.
+// 常用于同时绑定 URI + JSON / URI + Query 等多来源请求参数.
+func ComposeBinders(binders ...Binder) Binder {
+	return func(obj any) error {
+		for _, b := range binders {
+			if b == nil {
+				continue
+			}
+			if err := b(obj); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 // HandleRequest 是通用的请求处理函数.
 // 负责绑定请求数据、执行验证、并调用实际的业务处理逻辑函数.
 func HandleRequest[T any, R any](c *gin.Context, binder Binder, handler Handler[T, R], validators ...Validator[T]) {
